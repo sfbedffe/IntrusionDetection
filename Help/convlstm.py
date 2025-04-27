@@ -189,3 +189,12 @@ class ConvLSTM(nn.Module):
         if not isinstance(param, list):
             param = [param] * num_layers
         return param
+
+
+if __name__ == '__main__':
+    """测试输出tensor形状"""
+    x = torch.rand((2, 3, 1, 8, 8))
+    convlstm = ConvLSTM(1, 4, (3,3), 1, True, True, False)
+    _, last_states = convlstm(x)
+    h = last_states[0][0]  # 0 for layer index, 0 for h index
+    print(h.shape)   # ! (B, C, W, H)
