@@ -20,7 +20,7 @@ my_model = myModel()
 # optimizer = optim.Adam(my_model.parameters(), lr=LEARN_RATE, betas=[0.9, 0.999], eps=1e-8)
 optimizer = optim.SGD(my_model.parameters(), lr=LEARN_RATE, momentum=0.9)
 # 定义学习率调度器
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=15, gamma=0.1)
 # 定义损失器
 # ! 交叉熵损失函数期望目标张量是0维或1维的类索引，而不是独热编码形式
 losser = nn.CrossEntropyLoss()  # criterion
@@ -31,6 +31,7 @@ my_model.to(device)
 log_loss = 0.0
 for epoch in range(EPOCH):
     print(f"!! Epoch: {epoch}!!")
+    my_model.train()
     for index, (data, label) in enumerate(my_dataloader):
         # 前向传播
         label = torch.argmax(label, dim=1)  # 转换为索引标签
@@ -56,5 +57,24 @@ for epoch in range(EPOCH):
     scheduler.step()
         
 # 模型测试
-# model.eval()
+correct = 0
+total = 0
+my_model.eval()
+with torch.no_grad():
+    for ind, (data_t, label_t) in enumerate(my_dataloader):
+        data_t = data_t.to(device)
+        label_t = torch.argmax(label_t, dim=1)
+        # print(label_t)
+        label_t = label_t.to(device)
+        outpt_t = my_model(data_t)
+        # print(outpt_t)
+        predict = outpt_t.argmax(dim=1)
+        # print(predict)
+        total += label_t.size(0)
+        correct += (predict == label_t).sum().item()
+        if ind == 1500:
+            break
+acc = correct / total
+print(f"测试集准确率: {acc:.4f}")
+    
     

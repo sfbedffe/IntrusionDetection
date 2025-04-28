@@ -42,18 +42,18 @@ NUM_LAYER = 3
 DROPOUT = 0.2
 FC_FEATURE = 200  # 1600 -> 80 -> 5
 LEARN_RATE = 0.01
-EPOCH = 60
+EPOCH = 30
 
 """模型结构"""
 class myModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.ts_feature = nn.Sequential(
-            nn.Conv2d(in_channels=1, out_channels=TIME_STEP, kernel_size=(5,5), padding=0, stride=1),
+            nn.Conv2d(in_channels=1, out_channels=TIME_STEP, kernel_size=(3,3), padding=0, stride=1),
             # nn.ReLU(inplace=True),
             # nn.BatchNorm2d(num_features=TIME_STEP),
             # ! 构造伪时序 C0 -> T ：(B0, C0, H0, W0) ==> (B0, T, 1, H0, W0)  
-            Reshape(batch_size=BATCH_SIZE, time_step=TIME_STEP, channel=1, hight=8, width=8),
+            Reshape(batch_size=BATCH_SIZE, time_step=TIME_STEP, channel=1, hight=10, width=10),
             # ! LSTM输出为(ci, hi)元组，hi和ci形状为(L, B, C, W, H), 只输出最后一个时间步，且W、H维度不变
             ConvLSTM(input_dim=1, hidden_dim=HIDDEN_DIM, kernel_size=(3,3), num_layers=NUM_LAYER, batch_first=True)
             # ? ConvLSTM内部卷积后是否需要需要Batch-Norm
@@ -62,7 +62,7 @@ class myModel(nn.Module):
         self.classfier = nn.Sequential(
             nn.Flatten(start_dim=1),  # 首维为0，ConvLSTM输出(B, C, W, H)
             # ? 中间层神经元数多少合适
-            nn.Linear(in_features=8*8*HIDDEN_DIM, out_features=FC_FEATURE),
+            nn.Linear(in_features=10*10*HIDDEN_DIM, out_features=FC_FEATURE),
             nn.ReLU(inplace=True),
             # nn.Dropout(DROPOUT),
             nn.Linear(in_features=FC_FEATURE, out_features=5)
