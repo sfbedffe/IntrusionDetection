@@ -9,8 +9,8 @@ from torch.utils.data import DataLoader
 # DROPOUT = 0.2
 # FC_FEATURE = 200  # 1600 -> 200 -> 5
 # 载入数据
-data_path = r"E:\Experiments\IntrusionDetection\NSL-KDD_Prep\KDDTrain20.txt"
-label_path = r"E:\Experiments\IntrusionDetection\NSL-KDD_Prep\KDDTrain20_label_multip.txt"
+data_path = r"E:\Experiments\IntrusionDetection\NSL-KDD_Prep\KDDTrain.txt"
+label_path = r"E:\Experiments\IntrusionDetection\NSL-KDD_Prep\KDDTrain_label_multip.txt"
 my_dataset =  myDataset((data_path, label_path))
 my_dataloader = DataLoader(dataset=my_dataset, batch_size=BATCH_SIZE, shuffle=True)
 # 实例化模型
@@ -20,12 +20,12 @@ my_model = myModel()
 # optimizer = optim.Adam(my_model.parameters(), lr=LEARN_RATE, betas=[0.9, 0.999], eps=1e-8)
 optimizer = optim.SGD(my_model.parameters(), lr=LEARN_RATE, momentum=0.9)
 # 定义学习率调度器
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=15, gamma=0.1)
+# scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=15, gamma=0.1)
 # 定义损失器
 # ! 交叉熵损失函数期望目标张量是0维或1维的类索引，而不是独热编码形式
 losser = nn.CrossEntropyLoss()  # criterion
-# 模型训练
-my_model.train()
+# 模型训练 
+my_model.train()  
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 my_model.to(device)
 log_loss = 0.0
@@ -48,18 +48,23 @@ for epoch in range(EPOCH):
         
         # 记录过程
         log_loss += loss.item()
-        if (index+1) % 100 == 0:
-            print(f'Index [{index+1}], Loss: {log_loss/100 :.4f}')
-            log_loss = 0.0
+        if (index+1) % 1000 == 0:
+            print(f'Index [{index+1}], Loss: {log_loss/1000 :.4f}')
+            log_loss = 0.01
         
-        if index == 1500:
+        if index == 7800:  # train20：1500 , train+: 7800
             break
-    scheduler.step()
+    # scheduler.step()
         
 # 模型测试
 correct = 0
 total = 0
 my_model.eval()
+print("!!模型测试!!")
+data_path = r"E:\Experiments\IntrusionDetection\NSL-KDD_Prep\KDDTest.txt"
+label_path = r"E:\Experiments\IntrusionDetection\NSL-KDD_Prep\KDDTest_label_multip.txt"
+my_dataset =  myDataset((data_path, label_path))
+my_dataloader = DataLoader(dataset=my_dataset, batch_size=BATCH_SIZE, shuffle=True)
 with torch.no_grad():
     for ind, (data_t, label_t) in enumerate(my_dataloader):
         data_t = data_t.to(device)
@@ -72,8 +77,8 @@ with torch.no_grad():
         # print(predict)
         total += label_t.size(0)
         correct += (predict == label_t).sum().item()
-        if ind == 1500:
-            break
+        # if ind == 7800:  # train+ 7800
+        #     break
 acc = correct / total
 print(f"测试集准确率: {acc:.4f}")
     

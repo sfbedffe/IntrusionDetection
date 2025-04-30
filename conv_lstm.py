@@ -40,9 +40,9 @@ BATCH_SIZE = 16
 HIDDEN_DIM = 32  # output channel number 
 NUM_LAYER = 3
 DROPOUT = 0.2
-FC_FEATURE = 200  # 1600 -> 80 -> 5
+FC_FEATURE = 800  # 1600 -> 80 -> 5
 LEARN_RATE = 0.01
-EPOCH = 30
+EPOCH = 10
 
 """模型结构"""
 class myModel(nn.Module):
@@ -50,8 +50,8 @@ class myModel(nn.Module):
         super().__init__()
         self.ts_feature = nn.Sequential(
             nn.Conv2d(in_channels=1, out_channels=TIME_STEP, kernel_size=(3,3), padding=0, stride=1),
-            # nn.ReLU(inplace=True),
-            # nn.BatchNorm2d(num_features=TIME_STEP),
+            nn.ReLU(inplace=True),
+            nn.BatchNorm2d(num_features=TIME_STEP),
             # ! 构造伪时序 C0 -> T ：(B0, C0, H0, W0) ==> (B0, T, 1, H0, W0)  
             Reshape(batch_size=BATCH_SIZE, time_step=TIME_STEP, channel=1, hight=10, width=10),
             # ! LSTM输出为(ci, hi)元组，hi和ci形状为(L, B, C, W, H), 只输出最后一个时间步，且W、H维度不变
@@ -64,7 +64,7 @@ class myModel(nn.Module):
             # ? 中间层神经元数多少合适
             nn.Linear(in_features=10*10*HIDDEN_DIM, out_features=FC_FEATURE),
             nn.ReLU(inplace=True),
-            # nn.Dropout(DROPOUT),
+            nn.Dropout(DROPOUT),
             nn.Linear(in_features=FC_FEATURE, out_features=5)
             # nn.Softmax(dim=-1)
         )
